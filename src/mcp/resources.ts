@@ -47,6 +47,14 @@ export class ResourceManager {
                 filePath: join(GlobalPaths.workspace, 'readme.md'), // 存储完整文件路径
                 mimeType: 'text/markdown'
             });
+            resources.push({
+                uri: 'cli://docs/ai-guide',
+                name: 'AI Guide',
+                title: 'AI Agent Skills & Guide',
+                description: 'Complete guide for AI agents to use Cocos CLI through MCP tools and CLI commands',
+                filePath: join(GlobalPaths.workspace, 'docs', 'ai-guide.md'),
+                mimeType: 'text/markdown'
+            });
             const items = readdirSync(this.docsPath);
 
             for (const item of items) {

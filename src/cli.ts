@@ -3,7 +3,7 @@ import { initSentry } from './core/base/sentry';
 initSentry();
 
 import { Command } from 'commander';
-import { BuildCommand, McpServerCommand, CommandRegistry, CreateCommand, MakeCommand, RunCommand } from './commands';
+import { BuildCommand, McpServerCommand, CommandRegistry, CreateCommand, MakeCommand, RunCommand, WizardCommand } from './commands';
 import { config } from './display/config';
 import { PreviewCommand } from './commands/preview';
 
@@ -29,6 +29,7 @@ commandRegistry.register(new McpServerCommand(program));
 commandRegistry.register(new MakeCommand(program));
 commandRegistry.register(new RunCommand(program));
 commandRegistry.register(new PreviewCommand(program));
+commandRegistry.register(new WizardCommand(program));
 
 // 注册所有命令
 commandRegistry.registerAll();

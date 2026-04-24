@@ -7,6 +7,7 @@ import { McpServerCommand } from './mcp-server';
 import { CreateCommand } from './create';
 import { MakeCommand } from './make';
 import { RunCommand } from './run';
+import { WizardCommand } from './wizard';
 
 export { BaseCommand, CommandUtils } from './base';
 export { BuildCommand } from './build';
@@ -14,11 +15,12 @@ export { McpServerCommand } from './mcp-server';
 export { CreateCommand } from './create';
 export { MakeCommand } from './make';
 export { RunCommand } from './run';
+export { WizardCommand } from './wizard';
 
 /**
  * 所有命令类的类型
  */
-export type CommandClass = BuildCommand | McpServerCommand | CreateCommand | MakeCommand | RunCommand;
+export type CommandClass = BuildCommand | McpServerCommand | CreateCommand | MakeCommand | RunCommand | WizardCommand;
 
 /**
  * 命令注册器
