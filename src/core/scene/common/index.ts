@@ -1,4 +1,5 @@
 export * from './const';
+export * from './cli';
 export * from './node';
 export * from './prefab';
 export * from './editor';
@@ -6,3 +7,9 @@ export * from './script';
 export * from './component';
 export * from './asset';
 export * from './engine';
+export * from './selection';
+export * from './operation';
+export * from './undo';
+export * from './camera';
+export * from './gizmo';
+export * from './scene-view';

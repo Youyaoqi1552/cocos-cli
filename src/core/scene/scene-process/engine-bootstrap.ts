@@ -2,6 +2,8 @@ import * as EditorExtends from '../../engine/editor-extends';
 import { Rpc } from './rpc';
 import { serviceManager } from './service/service-manager';
 import { Service as DecoratorService } from './service/core/decorator';
+import { ServiceEvents } from './service/core/global-events';
+
 import './service';
 
 // Patch UuidUtils for casing compatibility
@@ -71,7 +73,9 @@ export async function startup(options: {
 
     (globalThis as any).cce = (globalThis as any).cce || {};
     (globalThis as any).cce.Script = DecoratorService.Script;
-    (globalThis as any).cli = DecoratorService;
+    (globalThis as any).cli = {};
+    (globalThis as any).cli.Scene = DecoratorService;
+    (globalThis as any).cli.SceneEvents = ServiceEvents;
 
     if (EditorExtends.init) {
         await EditorExtends.init();
@@ -96,9 +100,35 @@ export async function startup(options: {
 
     // 切换物理引擎
     cc.physics.selector.switchTo(backend);
-    //TODO
-    cc.view.setDesignResolutionSize(1920, 1080, cc.ResolutionPolicy.SHOW_ALL);
+    const dr = config?.overrideSettings?.screen?.designResolution;
+    const drWidth = dr?.width ?? 1280;
+    const drHeight = dr?.height ?? 720;
+    let drPolicy = cc.ResolutionPolicy.SHOW_ALL;
+    if (dr) {
+        const fw = dr.fitWidth !== false;
+        const fh = dr.fitHeight === true;
+        if (fw && !fh) drPolicy = cc.ResolutionPolicy.FIXED_WIDTH;
+        else if (!fw && fh) drPolicy = cc.ResolutionPolicy.FIXED_HEIGHT;
+    }
+    cc.view.setDesignResolutionSize(drWidth, drHeight, drPolicy);
 
     await cc.game.run();
     await DecoratorService.Engine.init();
+    await serviceManager.initAllServices();
+
+    const canvas = document.getElementById('GameCanvas') as HTMLCanvasElement | null;
+    if (canvas && DecoratorService.Operation) {
+        await new Promise<void>((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = '/static/web/input-bridge.js';
+            s.onload = () => resolve();
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+        (globalThis as any).setupInputBridge({
+            canvas,
+            operation: DecoratorService.Operation,
+            engine: DecoratorService.Engine,
+        });
+    }
 }

@@ -123,6 +123,12 @@ export const SchemaQueryAssetsOption = z.object({
 export const SchemaSupportCreateType = z.enum(SUPPORT_CREATE_TYPES as any).describe('Supported asset handler types for creation'); // 支持创建的资源处理器类型
 export const SchemaTargetPath = z.string().min(1).describe('Target path, asset will be created or imported to this path'); // 目标路径，资源将被创建或导入到此路径
 export const SchemaBaseName = z.string().min(1).describe('Base name, asset will be created or imported to this name'); // 基础名称，资源将被创建或导入到此名称
+export const SchemaAssetNewName = z.string()
+    .min(1)
+    .refine((value) => value !== '.' && value !== '..' && !value.startsWith('db://') && !/[\\/]/.test(value), {
+        message: 'New name must be a single file or directory name, not a path',
+    })
+    .describe('New asset name in the current directory. For file assets, include the file extension.'); // 新的资源名称，仅用于当前目录下重命名；文件资源需要包含后缀名
 export const SchemaAssetOperationOption = z.object({
     overwrite: z.boolean().optional().describe('Whether to force overwrite existing files, default false'), // 是否强制覆盖已存在的文件，默认 false
     rename: z.boolean().optional().describe('Whether to automatically rename conflicting files, default false'), // 是否自动重命名冲突文件，默认 false
@@ -214,6 +220,7 @@ export type TDataKeys = z.infer<typeof SchemaDataKeys>;
 export type TQueryAssetsOption = z.infer<typeof SchemaQueryAssetsOption> | undefined;
 export type TSupportCreateType = z.infer<typeof SchemaSupportCreateType>;
 export type TTargetPath = z.infer<typeof SchemaTargetPath>;
+export type TAssetNewName = z.infer<typeof SchemaAssetNewName>;
 export type TAssetOperationOption = z.infer<typeof SchemaAssetOperationOption> | undefined;
 export type TSourcePath = z.infer<typeof SchemaSourcePath>;
 export type TAssetData = z.infer<typeof SchemaAssetData>;
@@ -250,12 +257,6 @@ export type TUpdateAssetUserDataValue = z.infer<typeof SchemaUpdateAssetUserData
 export const SchemaUpdateAssetUserDataResult = z.any().describe('Updated user data object'); // 更新后的用户数据对象
 export type TUpdateAssetUserDataResult = z.infer<typeof SchemaUpdateAssetUserDataResult>;
 
-// Asset Config Map related Schema // Asset Config Map 相关 Schema
-export const SchemaThumbnailInfo = z.object({
-    type: z.enum(['icon', 'image']).describe('Thumbnail type: icon or image'), // 缩略图类型：icon 或 image
-    value: z.string().describe('Specific icon name or image path, supports absolute path, db://, project:// paths'), // 具体 icon 名字或者 image 路径，支持绝对路径、db://、project:// 下的路径
-}).describe('Thumbnail information'); // 缩略图信息
-
 // Recursively defined user data configuration item // 递归定义用户数据配置项
 const SchemaUserDataConfigItem: z.ZodType<any> = z.lazy(() => z.object({
     key: z.string().optional().describe('Unique identifier'), // 唯一标识符
@@ -282,7 +283,6 @@ export const SchemaAssetConfig = z.object({
     description: z.string().optional().describe('Asset description'), // 资源描述
     docURL: z.string().optional().describe('Document URL'), // 文档 URL
     userDataConfig: z.record(z.string(), SchemaUserDataConfigItem).optional().describe('User data configuration'), // 用户数据配置
-    iconInfo: SchemaThumbnailInfo.optional().describe('Icon information'), // 图标信息
 }).describe('Asset configuration information'); // 资源配置信息
 
 export const SchemaAssetConfigMapResult = z.record(z.string(), SchemaAssetConfig).describe('Asset configuration map, key is asset handler name, value is corresponding configuration information'); // 资源配置映射表，键为资源处理器名称，值为对应的配置信息

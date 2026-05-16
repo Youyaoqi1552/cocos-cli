@@ -13,6 +13,18 @@ import {
     IPublicEngineService,
     IPublicPrefabService,
     IPrefabService,
+    IPublicSelectionService,
+    ISelectionService,
+    IPublicOperationService,
+    IOperationService,
+    IPublicUndoService,
+    IUndoService,
+    IPublicCameraService,
+    ICameraService,
+    IPublicGizmoService,
+    IGizmoService,
+    IPublicSceneViewService,
+    ISceneViewService,
 } from '../../common';
 
 /**
@@ -26,6 +38,12 @@ export interface IPublicServiceManager {
     Asset: IPublicAssetService,
     Engine: IPublicEngineService,
     Prefab: IPublicPrefabService,
+    Selection: IPublicSelectionService,
+    Operation: IPublicOperationService,
+    Undo: IPublicUndoService,
+    Camera: IPublicCameraService,
+    Gizmo: IPublicGizmoService,
+    SceneView: IPublicSceneViewService,
 }
 
 export interface IServiceManager {
@@ -36,4 +54,10 @@ export interface IServiceManager {
     Asset: IAssetService,
     Engine: IEngineService,
     Prefab: IPrefabService,
+    Selection: ISelectionService,
+    Operation: IOperationService,
+    Undo: IUndoService,
+    Camera: ICameraService,
+    Gizmo: IGizmoService,
+    SceneView: ISceneViewService,
 }

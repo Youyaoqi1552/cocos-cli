@@ -1,7 +1,7 @@
 import { getServiceAll, IServiceEvents, ServiceEvents } from './core';
-import { IEditorEvents, INodeEvents, IComponentEvents, IScriptEvents, IAssetEvents } from '../../common';
+import { IEditorEvents, INodeEvents, IComponentEvents, IScriptEvents, IAssetEvents, ISelectionEvents } from '../../common';
 
-type AllEvents = IEditorEvents & INodeEvents & IComponentEvents & IScriptEvents & IAssetEvents;
+type AllEvents = IEditorEvents & INodeEvents & IComponentEvents & IScriptEvents & IAssetEvents & ISelectionEvents;
 
 // 排除事件
 type FilteredEvents = Exclude<keyof AllEvents, 'asset-refresh'>;
@@ -37,11 +37,16 @@ const SERVICE_EVENTS_MAP: EventMap = {
     'component:remove': 'onRemoveComponent',
     'component:added': 'onComponentAdded',
     'component:removed': 'onComponentRemoved',
-    'component:before-remove': 'onBeforeRemoveComponent',
     'component:set-property': 'onSetPropertyComponent',
-    'component:before-add-component': 'onBeforeComponentAdded',
+    'component:before-add-component': 'onBeforeAddComponent',
+    'component:before-remove-component': 'onBeforeRemoveComponent',
     // Script 事件
     'script:execution-finished': 'onScriptExecutionFinished',
+
+    // Selection 事件
+    'selection:select': 'onSelectionSelect',
+    'selection:unselect': 'onSelectionUnselect',
+    'selection:clear': 'onSelectionClear',
 } as const;
 
 type ServiceEventType = typeof SERVICE_EVENTS_MAP[keyof typeof SERVICE_EVENTS_MAP];
@@ -63,12 +68,62 @@ export class ServiceManager {
         return this.serverUrl;
     }
 
+    /**
+     * Camera/Gizmo 依赖的编辑器内置 effect UUID
+     */
+    private static readonly EDITOR_EFFECT_UUIDS = [
+        'ba35f02e-a81c-464c-bfc5-c788328da667', // internal/editor/grid
+        'cb2c332a-fa5e-4235-a129-f011634bb7ad', // internal/editor/grid-2d
+        '4736e978-c8fa-449f-9cf6-fe0158ded9d7', // internal/editor/grid-stroke
+        '9d6c6bde-2fe2-44ee-883b-909608948b04', // internal/editor/gizmo
+        'e4e4cb19-8dd2-450d-ad20-1a818263b8d3', // internal/editor/light
+        '084eba38-5336-4444-8c8c-aebb75d5c627', // internal/editor/box-height-light
+    ];
+
+    /**
+     * 遍历所有已注册的 Service，依次调用 init()（跳过 Engine，它需要单独初始化）
+     */
+    async initAllServices() {
+        await this.loadEditorEffects();
+        for (const service of getServiceAll()) {
+            const name = service.constructor.name;
+            if (name === 'EngineService') continue;
+            if (typeof service.init === 'function') {
+                try {
+                    service.init();
+                } catch (e) {
+                    console.warn(`[ServiceManager] init failed on ${name}:`, e);
+                }
+            }
+        }
+    }
+
+    private loadEditorEffects(): Promise<void> {
+        return new Promise((resolve) => {
+            try {
+                cc.assetManager.loadAny(ServiceManager.EDITOR_EFFECT_UUIDS, (err: any) => {
+                    if (err) {
+                        console.warn('[ServiceManager] Failed to load editor effects:', err);
+                    }
+                    resolve();
+                });
+            } catch (e) {
+                console.warn('[ServiceManager] loadEditorEffects error:', e);
+                resolve();
+            }
+        });
+    }
+
     private registerAutoForwardEvents() {
         Object.entries(SERVICE_EVENTS_MAP).forEach(([eventType, methodName]) => {
             const handler = (...args: any[]) => {
                 for (const service of getServiceAll()) {
                     if (methodName in service && typeof service[methodName] === 'function') {
-                        service[methodName].apply(service, args);
+                        try {
+                            service[methodName].apply(service, args);
+                        } catch (e) {
+                            console.warn(`[ServiceManager] ${methodName} failed on ${service.constructor.name}:`, e);
+                        }
                     }
                 }
             };

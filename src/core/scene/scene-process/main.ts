@@ -49,6 +49,7 @@ async function startup() {
         // 初始化 engine 服务
         const { Service } = await import('./service/core/decorator');
         await Service.Engine.init();
+        await serviceManager.initAllServices();
     });
 
     console.log('[Scene] initEngine success');
